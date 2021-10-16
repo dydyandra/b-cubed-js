@@ -29,7 +29,7 @@ let finish;
 const start = indexToCoordinates(48);
 // console.log(start);
 let isOver = false;
-let inGame = false;
+let isFinish = false;
 
 // Objects
 const objects = []
@@ -61,8 +61,8 @@ function buildPlane(index){
     gridSpace.add(mesh);
     objects.push(mesh);
 }
-
-let planeObjects = 99
+const const_planeObjects = 99
+let planeObjects = const_planeObjects;
 
 for(let i = 0; i < planeObjects; i++){
     buildPlane(i);
@@ -99,6 +99,7 @@ function checkState(idx){
     else{
         if(objects[idx].material.color.getHex() === finishColor && planeObjects === 1){
             console.log('Finish');
+            isFinish = true;
         }
     }
 }
@@ -127,7 +128,6 @@ function isCollide(box1, box2){
 
 function onKeyDown(e){
     if(e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40){
-        inGame = true;
         let prev = coordinatesToIndex(new THREE.Vector2(playerMesh.position.x, playerMesh.position.z));
         switch(e.keyCode){
             // left
@@ -165,6 +165,20 @@ function disposeObject(obj){
     // console.log(planeObjects);
     renderer.renderLists.dispose();
 }
+
+function restart(){
+    objects.forEach((o) => disposeObject(o))
+    objects.length = 0;
+    planeObjects = const_planeObjects;
+    
+    for(let i = 0; i < planeObjects; i++){
+        buildPlane(i);
+    }
+    playerMesh.position.set(start.x, boxSize - (boxSize * 0.0001), start.y)
+
+    setFinish(coordinatesToIndex(finish));
+}
+
 // Lights
 
 const skyColor = 0xB1E1FF;
@@ -224,7 +238,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 
 const clock = new THREE.Clock()
-
+console.log(finish);
 const tick = () =>
 {
 
@@ -232,6 +246,19 @@ const tick = () =>
 
     // Update Orbital Controls
     controls.update()
+
+    if(isOver){
+        if(!alert('Game Over!')){
+            isOver = false;
+            restart();
+        }
+    }
+    else if(isFinish){
+        if(!alert('Congratulations!')){
+            isFinish = false;
+            restart();
+        }
+    }
 
     // Render
     renderer.render(scene, camera)

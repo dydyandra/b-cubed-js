@@ -166,6 +166,41 @@ function disposeObject(obj){
     renderer.renderLists.dispose();
 }
 
+let timeinterval;
+function getTimeRemaining(endtime) {
+    const total = Date.parse(endtime) - Date.parse(new Date());
+    const seconds = Math.floor((total / 1000) % 60);
+    const minutes = Math.floor((total / 1000 / 60) % 60);
+    
+    return {
+      minutes,
+      seconds
+    };
+  }
+  
+  function initializeClock(id, endtime) {
+    const clock2 = document.getElementById(id);
+    const minutesSpan = clock2.querySelector('.minutes');
+    const secondsSpan = clock2.querySelector('.seconds');
+  
+    function updateClock() {
+      const t = getTimeRemaining(endtime);
+  
+      minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
+      secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
+      if (t.minutes <= 0 && t.seconds <= 0 && !isOver && !isFinish) {
+        clearInterval(timeinterval);
+        isOver = true;
+      }
+    }
+  
+    updateClock();
+    timeinterval = setInterval(updateClock, 1000);
+  }
+  
+let deadline = new Date(Date.parse(new Date()) + 180 * 1000);
+initializeClock('clockdiv', deadline);
+
 function restart(){
     objects.forEach((o) => disposeObject(o))
     objects.length = 0;
@@ -177,6 +212,8 @@ function restart(){
     playerMesh.position.set(start.x, boxSize - (boxSize * 0.0001), start.y)
 
     setFinish(coordinatesToIndex(finish));
+    deadline = new Date(Date.parse(new Date()) + 180 * 1000);
+    initializeClock('clockdiv', deadline);
 }
 
 // Lights
@@ -233,39 +270,6 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
-function getTimeRemaining(endtime) {
-    const total = Date.parse(endtime) - Date.parse(new Date());
-    const seconds = Math.floor((total / 1000) % 60);
-    const minutes = Math.floor((total / 1000 / 60) % 60);
-    
-    return {
-      minutes,
-      seconds
-    };
-  }
-  
-  function initializeClock(id, endtime) {
-    const clock2 = document.getElementById(id);
-    const minutesSpan = clock2.querySelector('.minutes');
-    const secondsSpan = clock2.querySelector('.seconds');
-  
-    function updateClock() {
-      const t = getTimeRemaining(endtime);
-  
-      minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
-      secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
-      if (t.minutes <= 0 && t.seconds <= 0) {
-        clearInterval(timeinterval);
-        isOver = true;
-      }
-    }
-  
-    updateClock();
-    const timeinterval = setInterval(updateClock, 1000);
-  }
-  
-  const deadline = new Date(Date.parse(new Date()) + 180 * 1000);
-  initializeClock('clockdiv', deadline);
 /**
  * Animate
  */
@@ -283,12 +287,14 @@ const tick = () =>
     if(isOver){
         if(!alert('Game Over!')){
             isOver = false;
+            clearInterval(timeinterval);
             restart();
         }
     }
     else if(isFinish){
         if(!alert('Congratulations!')){
             isFinish = false;
+            clearInterval(timeinterval);
             restart();
         }
     }

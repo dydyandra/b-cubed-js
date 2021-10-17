@@ -27,6 +27,7 @@ scene.add(gridSpace);
 // Game
 let finish;
 const start = indexToCoordinates(48);
+const purpleTileIndex = [17,25,28,36,39,46,47,60,62,67,73,78,79,83,84]
 // console.log(start);
 let isOver = false;
 let isFinish = false;
@@ -88,6 +89,16 @@ function setFinish(index){
     finish = new THREE.Vector2(obj.position.x, obj.position.z);
 }
 
+// Purple tile
+const purpleColor = 0xd50eff;
+function setPurple(index){
+    /**
+     * @type {THREE.Mesh} obj
+     */
+    const obj = objects[index];
+    obj.material.color.setHex(purpleColor);
+}
+
 // checkState
 
 function checkState(idx){
@@ -104,7 +115,8 @@ function checkState(idx){
     }
 }
 
-setFinish(82);
+setFinish(93);
+purpleTileIndex.forEach(setPurple);
 
 // Collision
 function isCollide(box1, box2){
@@ -158,12 +170,28 @@ function onKeyDown(e){
 }
 
 function disposeObject(obj){
-    obj.geometry.dispose();
-    obj.material.dispose();
-    gridSpace.remove(obj);
-    planeObjects--;
-    // console.log(planeObjects);
-    renderer.renderLists.dispose();
+    if(!isOver && !isFinish){
+        if(obj.material.color.getHex() === 0xffffff || obj.material.color.getHex() === finishColor){
+            obj.geometry.dispose();
+            obj.material.dispose();
+            gridSpace.remove(obj);
+            planeObjects--;
+            // console.log(planeObjects);
+            renderer.renderLists.dispose();
+        }
+        else if (obj.material.color.getHex() === purpleColor) {
+            obj.material.color.setHex(0xffffff);
+        }
+        console.log(planeObjects);
+    }
+    else {
+        obj.geometry.dispose();
+        obj.material.dispose();
+        gridSpace.remove(obj);
+        planeObjects--;
+        // console.log(planeObjects);
+        renderer.renderLists.dispose();
+    }
 }
 
 let timeinterval;
@@ -212,6 +240,7 @@ function restart(){
     playerMesh.position.set(start.x, boxSize - (boxSize * 0.0001), start.y)
 
     setFinish(coordinatesToIndex(finish));
+    purpleTileIndex.forEach(setPurple);
     deadline = new Date(Date.parse(new Date()) + 180 * 1000);
     initializeClock('clockdiv', deadline);
 }
@@ -283,27 +312,27 @@ const tick = () =>
 
     // Update Orbital Controls
     controls.update()
-
+     
     if(isOver){
         if(!alert('Game Over!')){
-            isOver = false;
             clearInterval(timeinterval);
             restart();
+            isOver = false;
         }
     }
     else if(isFinish){
         if(!alert('Congratulations!')){
-            isFinish = false;
             clearInterval(timeinterval);
             restart();
+            isFinish = false;
         }
     }
-
     // Render
     renderer.render(scene, camera)
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
+
 }
 
 window.addEventListener('keydown', onKeyDown, false);

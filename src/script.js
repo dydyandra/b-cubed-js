@@ -74,6 +74,7 @@ const playerMaterial = new THREE.MeshPhongMaterial({
     color: 'gold'
 });
 const playerMesh = new THREE.Mesh(boxGeometry, playerMaterial);
+playerMesh.name = 'Player'
 gridSpace.add(playerMesh);
 
 playerMesh.position.set(start.x, boxSize - (boxSize * 0.0001), start.y)
@@ -300,6 +301,57 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 /**
+ * Raycast
+ */
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function onMouseMove(event){
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+}
+
+window.addEventListener('mousemove', onMouseMove, false);
+
+const colors = [
+    new THREE.Color(0xff0000),
+    new THREE.Color(0xffff00),
+    new THREE.Color(0x00ff00),
+    new THREE.Color(0x0000ff)
+]
+
+const duration = 4;
+
+function hover(t){
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    // console.log(intersects[0]);
+    if(intersects.length > 0){
+        if(intersects[0].object.name === 'Player'){
+            console.log('intersect')
+            animatePlayerColor(t);
+        }
+    }
+}
+
+function animatePlayerColor(t){
+    const f = Math.floor(duration / colors.length);
+    const index1 = Math.floor((t / f) % colors.length);
+
+    let index2 = index1 + 1;
+
+    if(index2 === colors.length) index2 = 0;
+    
+    const color1 = colors[index1];
+    const color2 = colors[index2];
+
+    const alpha = (t / f) % colors.length % 1;
+    playerMesh.material.color.copy(color1);
+    playerMesh.material.color.lerp(color2, alpha);
+}
+
+/**
  * Animate
  */
 
@@ -312,6 +364,8 @@ const tick = () =>
 
     // Update Orbital Controls
     controls.update()
+
+    hover(elapsedTime);
      
     if(isOver){
         if(!alert('Game Over!')){
